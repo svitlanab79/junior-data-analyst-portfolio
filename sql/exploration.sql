@@ -75,6 +75,8 @@ HAVING COUNT(OrderID) > 1
 ORDER BY OrdersCount DESC;
 GO
 
+
+-- Some rows had missing ProductName. For analysis, excluded or labeled them as ‘Unknown’
 SELECT ISNULL(ProductName, 'Unknown') AS ProductName,
        SUM(Revenue) AS ProductRevenue,
        SUM(Revenue)/SUM(SUM(Revenue)) OVER() * 100 AS RevenuePercent
