@@ -1,10 +1,7 @@
 USE Ecommerce_Analysis;
 GO
 
------------------------------------------------------------
--- 1. CLEANUP & INITIALIZATION
------------------------------------------------------------
--- Drop existing tables to start fresh
+
 DROP TABLE IF EXISTS StagingOrders;
 DROP TABLE IF EXISTS OrdersWithRevenue;
 GO
