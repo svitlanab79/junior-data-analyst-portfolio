@@ -121,3 +121,26 @@ GROUP BY Country
 HAVING SUM(CASE WHEN Quantity < 0 THEN Revenue ELSE 0 END) < 0
 ORDER BY ReturnRatePct DESC;
 GO
+
+CREATE VIEW vw_PowerBI_Ecommerce AS
+SELECT 
+    InvoiceNo,
+    StockCode,
+    Description,
+    Quantity,
+    InvoiceDate,
+    
+    YEAR(InvoiceDate) AS InvoiceYear,
+    MONTH(InvoiceDate) AS InvoiceMonth,
+    UnitPrice,
+    CustomerID,
+    Country,
+    Revenue,
+    
+    CASE 
+        WHEN Quantity < 0 THEN 'Return'
+        ELSE 'Sales'
+    END AS TransactionType
+FROM OrdersWithRevenue
+WHERE Country <> 'Unspecified'; 
+GO
