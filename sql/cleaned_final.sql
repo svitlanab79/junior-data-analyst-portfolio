@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS StagingOrders;
 DROP TABLE IF EXISTS OrdersWithRevenue;
 GO
 
--- Create staging table with flexible types to handle messy CSV input
+
 CREATE TABLE StagingOrders (
     InvoiceNo NVARCHAR(MAX),
     StockCode NVARCHAR(MAX),
@@ -19,8 +19,8 @@ CREATE TABLE StagingOrders (
 );
 GO
 
------------------------------------------------------------
--- 2. DATA INGESTION (BULK INSERT)
+
+-- 2. DATA INGESTION 
 -----------------------------------------------------------
 BULK INSERT StagingOrders
 FROM 'C:\Users\svitl\Documents\Portfolio\junior-data-analyst-portfolio\datasets\e_comm.csv'
@@ -33,8 +33,8 @@ WITH (
 );
 GO
 
------------------------------------------------------------
--- 3. FINAL TABLE STRUCTURE
+
+-- FINAL TABLE STRUCTURE
 -----------------------------------------------------------
 CREATE TABLE OrdersWithRevenue (
     InvoiceNo NVARCHAR(50),
@@ -50,9 +50,9 @@ CREATE TABLE OrdersWithRevenue (
 );
 GO
 
------------------------------------------------------------
--- 4. TRANSFORMATION & DATA RECOVERY
--- This step fixes the "shifted" rows and cleans invisible characters
+
+-- TRANSFORMATION & DATA RECOVERY
+-- "shifted" rows and cleans invisible characters
 -----------------------------------------------------------
 INSERT INTO OrdersWithRevenue (
     InvoiceNo, StockCode, Description, Quantity, 
@@ -64,17 +64,17 @@ SELECT
     TRIM(Description),
     TRY_CAST(Quantity AS INT),
     TRY_CAST(InvoiceDate AS DATETIME),
-    -- RECOVERY LOGIC: If Country has commas, the Price is actually the first part of that string
+    -- If Country has commas, the Price is actually the first part of that string
     CASE 
         WHEN Country LIKE '%,%' THEN TRY_CAST(LEFT(Country, CHARINDEX(',', Country) - 1) AS DECIMAL(18,2))
         ELSE TRY_CAST(UnitPrice AS DECIMAL(18,2)) 
     END,
-    -- RECOVERY LOGIC: Extract CustomerID from middle of shifted Country string
+    -- Extract CustomerID from middle of shifted Country string
     CASE 
         WHEN Country LIKE '%,%' THEN TRY_CAST(PARSENAME(REPLACE(Country, ',', '.'), 2) AS INT)
         ELSE TRY_CAST(NULLIF(TRIM(CustomerID), '') AS INT)
     END,
-    -- CLEANING LOGIC: Remove hidden Carriage Returns (CHAR 13) and non-breaking spaces (CHAR 160)
+    -- Remove hidden  (CHAR 13) and non-breaking spaces (CHAR 160)
     TRIM(REPLACE(REPLACE(REPLACE(
         CASE 
             WHEN Country LIKE '%,%' THEN PARSENAME(REPLACE(Country, ',', '.'), 1)
@@ -85,17 +85,9 @@ FROM StagingOrders
 WHERE InvoiceNo IS NOT NULL;
 GO
 
------------------------------------------------------------
--- 5. DATA STANDARDIZATION
------------------------------------------------------------
--- Consolidate EIRE into Ireland for better reporting
-UPDATE OrdersWithRevenue 
-SET Country = 'Ireland' 
-WHERE Country = 'EIRE';
-GO
 
------------------------------------------------------------
--- 6. FINAL ANALYTICAL REPORTS
+
+--  ANALYTICAL REPORTS
 -----------------------------------------------------------
 
 -- A. Global Revenue Performance
